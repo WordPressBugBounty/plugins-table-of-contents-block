@@ -5,43 +5,74 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 if ( ! class_exists( 'EbStyleHandlerParseCss' ) ) {
-    class EbStyleHandlerParseCss {
+    class EbStyleHandlerParseCss
+    {
 
         private static $instance;
 
-        public static function init() {
+        public static function init()
+        {
             if ( null === self::$instance ) {
                 self::$instance = new self;
             }
             return self::$instance;
         }
 
-        public function __construct() {
+        public function __construct()
+        {
+        }
+
+        /**
+         * Get Responsive Breakpoints
+         */
+        public static function get_responsive_breakpoints( $size = 'mobile' )
+        {
+            $settings     = get_option( 'eb_settings', [  ] );
+            $settingsData = [  ];
+
+            if ( array_key_exists( 'responsiveBreakpoints', $settings ) ) {
+                $settingsData = $settings[ 'responsiveBreakpoints' ];
+                if ( gettype( $settingsData ) === 'string' && strlen( $settingsData ) > 0 ) {
+                    $settingsData = (array) json_decode( html_entity_decode( stripslashes( $settingsData ) ) );
+                }
+            } else {
+                $settings[ 'responsiveBreakpoints' ] = [
+                    'tablet' => 1024,
+                    'mobile' => 767
+                 ];
+
+                update_option( 'eb_settings', $settings );
+
+                $settingsData = $settings[ 'responsiveBreakpoints' ];
+            }
+
+            return $settingsData[ $size ];
         }
 
         /**
          * Recursive function for parsing blocks
          */
-        public static function eb_block_style_recursive( $block, &$eb_blocks ) {
+        public static function eb_block_style_recursive( $block, &$eb_blocks )
+        {
             if ( count( $block ) > 0 ) {
                 foreach ( $block as $item ) {
-                    $attributes = $item['attrs'];
+                    $attributes = $item[ 'attrs' ];
 
                     $blockId = "";
-                    if ( isset( $attributes['blockId'] ) && ! empty( $attributes['blockId'] ) ) {
-                        $blockId = $attributes['blockId'];
+                    if ( isset( $attributes[ 'blockId' ] ) && ! empty( $attributes[ 'blockId' ] ) ) {
+                        $blockId = $attributes[ 'blockId' ];
                     }
                     $blockMeta = "";
-                    if ( isset( $attributes['blockMeta'] ) && ! empty( $attributes['blockMeta'] ) ) {
-                        $blockMeta = $attributes['blockMeta'];
+                    if ( isset( $attributes[ 'blockMeta' ] ) && ! empty( $attributes[ 'blockMeta' ] ) ) {
+                        $blockMeta = $attributes[ 'blockMeta' ];
                     }
                     $commonStyles = "";
-                    if ( isset( $attributes['commonStyles'] ) && ! empty( $attributes['commonStyles'] ) ) {
-                        $commonStyles = $attributes['commonStyles'];
+                    if ( isset( $attributes[ 'commonStyles' ] ) && ! empty( $attributes[ 'commonStyles' ] ) ) {
+                        $commonStyles = $attributes[ 'commonStyles' ];
                     }
                     $customCss = "";
-                    if ( isset( $attributes['customCss'] ) && ! empty( $attributes['customCss'] ) ) {
-                        $customCss = $attributes['customCss'];
+                    if ( isset( $attributes[ 'customCss' ] ) && ! empty( $attributes[ 'customCss' ] ) ) {
+                        $customCss = $attributes[ 'customCss' ];
                     }
 
                     if ( isset( $attributes[ 'ref' ] ) && ! empty( $attributes[ 'ref' ] ) && $item[ "blockName" ] === "core/block" ) {
@@ -60,21 +91,21 @@ if ( ! class_exists( 'EbStyleHandlerParseCss' ) ) {
                             $eb_blocks[ "reusableBlocks" ][ $reusable_block->ID ] = self::eb_block_style_recursive( $reusable_content, $reusable_blocks );
                         }
                     } else {
-                        if ( isset( $item["innerBlocks"] ) && count( $item["innerBlocks"] ) > 0 ) {
-                            self::eb_block_style_recursive( $item['innerBlocks'], $eb_blocks );
-                            if ( isset( $attributes['blockMeta'] ) && ! empty( $attributes['blockMeta'] ) ) {
-                                $eb_blocks[$blockId] = [
+                        if ( isset( $item[ "innerBlocks" ] ) && count( $item[ "innerBlocks" ] ) > 0 ) {
+                            self::eb_block_style_recursive( $item[ 'innerBlocks' ], $eb_blocks );
+                            if ( isset( $attributes[ 'blockMeta' ] ) && ! empty( $attributes[ 'blockMeta' ] ) ) {
+                                $eb_blocks[ $blockId ] = [
                                     'blockMeta'    => $blockMeta,
                                     'commonStyles' => $commonStyles,
                                     'customCss'    => $customCss
-                                ];
+                                 ];
                             }
-                        } else if ( isset( $attributes['blockMeta'] ) && ! empty( $attributes['blockMeta'] ) ) {
-                            $eb_blocks[$blockId] = [
+                        } else if ( isset( $attributes[ 'blockMeta' ] ) && ! empty( $attributes[ 'blockMeta' ] ) ) {
+                            $eb_blocks[ $blockId ] = [
                                 'blockMeta'    => $blockMeta,
                                 'commonStyles' => $commonStyles,
                                 'customCss'    => $customCss
-                            ];
+                             ];
                         }
                     }
                 }
@@ -86,7 +117,8 @@ if ( ! class_exists( 'EbStyleHandlerParseCss' ) ) {
         /**
          * Blockarray to Style Array Function
          */
-        public static function blocks_to_style_array( $blocks, $styles = [] ) {
+        public static function blocks_to_style_array( $blocks, $styles = [  ] )
+        {
             if ( is_array( $blocks ) && count( $blocks ) > 0 ) {
                 foreach ( $blocks as $blockId => $block ) {
                     if ( 'reusableBlocks' === $blockId ) {
@@ -96,27 +128,27 @@ if ( ! class_exists( 'EbStyleHandlerParseCss' ) ) {
                             }
                         }
                     } else {
-                        $styles[$blockId] = [
+                        $styles[ $blockId ] = [
                             'desktop'   => "",
                             'tab'       => "",
                             'mobile'    => "",
                             'customCss' => ""
-                        ];
+                         ];
 
                         if ( is_array( $block ) && count( $block ) > 0 ) {
                             foreach ( $block as $value ) {
                                 if ( is_array( $value ) && count( $value ) > 0 ) {
-                                    if ( isset( $value["desktop"] ) ) {
-                                        $styles[$blockId]["desktop"] .= $value["desktop"];
+                                    if ( isset( $value[ "desktop" ] ) ) {
+                                        $styles[ $blockId ][ "desktop" ] .= $value[ "desktop" ];
                                     }
-                                    if ( isset( $value["tab"] ) ) {
-                                        $styles[$blockId]["tab"] .= $value["tab"];
+                                    if ( isset( $value[ "tab" ] ) ) {
+                                        $styles[ $blockId ][ "tab" ] .= $value[ "tab" ];
                                     }
-                                    if ( isset( $value["mobile"] ) ) {
-                                        $styles[$blockId]["mobile"] .= $value["mobile"];
+                                    if ( isset( $value[ "mobile" ] ) ) {
+                                        $styles[ $blockId ][ "mobile" ] .= $value[ "mobile" ];
                                     }
-                                } else if ( isset( $block['customCss'] ) && is_string( $block['customCss'] ) && strlen( $block['customCss'] ) > 0 ) {
-                                    $styles[$blockId]["customCss"] .= $block['customCss'];
+                                } else if ( isset( $block[ 'customCss' ] ) && is_string( $block[ 'customCss' ] ) && strlen( $block[ 'customCss' ] ) > 0 ) {
+                                    $styles[ $blockId ][ "customCss" ] .= $block[ 'customCss' ];
                                 }
                             }
                         }
@@ -141,6 +173,11 @@ if ( ! class_exists( 'EbStyleHandlerParseCss' ) ) {
             if ( ! ( $post instanceof WP_Post ) || empty( $post->post_author ) ) {
                 return false;
             }
+            // On a save the editor's own rights count too: on multisite, an Editor could
+            // otherwise update a Super Admin's post and get unsanitized CSS.
+            if ( doing_action( 'save_post' ) && ! current_user_can( 'unfiltered_html' ) ) {
+                return false;
+            }
             return user_can( (int) $post->post_author, 'unfiltered_html' );
         }
 
@@ -160,6 +197,8 @@ if ( ! class_exists( 'EbStyleHandlerParseCss' ) ) {
             }
             // No markup can be formed without "<" (or its CSS escape).
             $css = str_replace( [ '<', '\\3c', '\\3C' ], '', $css );
+            // Comments can sit inside url() or split a keyword, so drop them before matching.
+            $css = preg_replace( '#/\*.*?(?:\*/|$)#s', '', $css );
             $css = preg_replace( '/@import\b[^;]*;?/i', '', $css );
             // An escaped at-keyword such as `@\69mport` is still @import to a browser.
             $css = preg_replace( '/@[\w-]*\\\\[^;{]*;?/', '', $css );
@@ -167,12 +206,15 @@ if ( ! class_exists( 'EbStyleHandlerParseCss' ) ) {
             $css = preg_replace( '/(?:javascript|vbscript)\s*:/i', '', $css );
             // Match the property only, so scroll-behavior and the like are kept.
             $css = preg_replace( '/(?<![\w-])(?:-moz-binding|(?:-ms-)?behavior)\s*:[^;}]*;?/i', '', $css );
-            // A function name written with CSS escapes (`u\72l(`) can hide url().
-            $css = preg_replace( '/[\w-]*\\\\[0-9a-fA-F]{1,6}\s?[\w\\\\-]*\(/', '(', $css );
+            // A function name written with any CSS escape (`u\72l(`, `u\rl(`) can hide url().
+            $escape = '\\\\(?:[0-9a-fA-F]{1,6}\s?|[^\r\n0-9a-fA-F])';
+            $css    = preg_replace( '/[\w-]*' . $escape . '(?:[\w-]|' . $escape . ')*\(/', '(', $css );
             // image-set() takes bare strings as URLs, so it cannot be checked like url().
             $css = preg_replace( '/(?:-webkit-)?image-set\s*\(/i', '(', $css );
             // Off-site url() lets attribute selectors send page data to another host.
             $css = preg_replace_callback( '/url\(\s*([\'"]?)(.*?)\1\s*\)/i', [ __CLASS__, 'filter_css_url' ], $css );
+            // A browser closes an open function at the end of the file, so an unclosed url() still loads.
+            $css = preg_replace( '/url\(\s*[\'"]?[^)]*$/i', 'none', $css );
             return $css;
         }
 
@@ -184,29 +226,29 @@ if ( ! class_exists( 'EbStyleHandlerParseCss' ) ) {
          */
         public static function filter_css_url( $matches )
         {
-            $url = trim( $matches[2] );
+            $url = trim( $matches[ 2 ] );
             // The browser decodes CSS escapes before it resolves the URL, so an
             // escaped value cannot be checked as written. Image URLs need none.
             if ( false !== strpos( $url, '\\' ) ) {
                 return 'none';
             }
             if ( '' === $url || 0 === stripos( $url, 'data:image/' ) ) {
-                return $matches[0];
+                return $matches[ 0 ];
             }
             if ( ! preg_match( '#^(?:[a-z][a-z0-9+.-]*:|//)#i', $url ) ) {
-                return $matches[0];
+                return $matches[ 0 ];
             }
             $host  = strtolower( (string) wp_parse_url( $url, PHP_URL_HOST ) );
             $hosts = array_map( 'strtolower', [
                 (string) wp_parse_url( home_url(), PHP_URL_HOST ),
                 (string) wp_parse_url( site_url(), PHP_URL_HOST ),
                 (string) wp_parse_url( content_url(), PHP_URL_HOST ),
-                (string) wp_parse_url( wp_get_upload_dir()[ 'baseurl' ], PHP_URL_HOST ),
-            ] );
+                (string) wp_parse_url( wp_get_upload_dir()[ 'baseurl' ], PHP_URL_HOST )
+             ] );
             // Sites that serve images or fonts from a CDN can add its host here.
             $hosts = array_map( 'strtolower', (array) apply_filters( 'eb_style_handler_css_url_hosts', $hosts ) );
             if ( '' !== $host && in_array( $host, $hosts, true ) && preg_match( '#^(?:https?:)?//#i', $url ) ) {
-                return $matches[0];
+                return $matches[ 0 ];
             }
             return 'none';
         }
@@ -250,12 +292,12 @@ if ( ! class_exists( 'EbStyleHandlerParseCss' ) ) {
                                 $css .= preg_replace( '/\s+/', ' ', $style );
                                 break;
                             case "tab":
-                                $css .= ' @media(max-width: 1024px){';
+                                $css .= ' @media(max-width: ' . self::get_responsive_breakpoints( 'tablet' ) . 'px){';
                                 $css .= preg_replace( '/\s+/', ' ', $style );
                                 $css .= '}';
                                 break;
                             case "mobile":
-                                $css .= ' @media(max-width: 767px){';
+                                $css .= ' @media(max-width: ' . self::get_responsive_breakpoints( 'mobile' ) . 'px){';
                                 $css .= preg_replace( '/\s+/', ' ', $style );
                                 $css .= '}';
                                 break;
@@ -277,7 +319,8 @@ if ( ! class_exists( 'EbStyleHandlerParseCss' ) ) {
          * Helper function to get string between 2 string
          * @since 3.3.0
          */
-        public static function get_between_data( $string, $start, $end ) {
+        public static function get_between_data( $string, $start, $end )
+        {
             $pos_string   = stripos( $string, $start );
             $substr_data  = substr( $string, $pos_string );
             $string_two   = substr( $substr_data, strlen( $start ) );
@@ -294,7 +337,8 @@ if ( ! class_exists( 'EbStyleHandlerParseCss' ) ) {
         /**
          * Is Gutenberg Editor
          */
-        public static function eb_stylehandler_is_gutenberg_editor( $pagenow, $param ) {
+        public static function eb_stylehandler_is_gutenberg_editor( $pagenow, $param )
+        {
             if ( $pagenow == 'post-new.php' || $pagenow == 'post.php' || $pagenow == 'site-editor.php' ) {
                 return true;
             }
